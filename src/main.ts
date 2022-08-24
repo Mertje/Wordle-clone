@@ -1,70 +1,99 @@
 import { Words } from './words'
 
-initGame()
+endgame()
+function endgame() {
+    const infoID = document.getElementById('information') as HTMLDivElement;
+    const startOver = document.createElement("div");
+    startOver.className = 'px-4 py-1 rounded bg-lime-600 text-white';
+    startOver.innerText = 'Start Game';
+    infoID.appendChild(startOver);
 
-export function initGame() {
-    const playBoard = document.getElementById('play-board') as HTMLDivElement
-
-    let attempt = 0;
-    const userWord: string[] = [];
-    const guesThisWord = randomWord(Words);
-    console.log(guesThisWord);
-
-    for (let i = 0; i < 6; i++) {
-        const row = document.createElement("div");
-        row!.className = 'box-rows flex';
-        playBoard!.appendChild(row);
-
-        for (let i = 0; i < 5; i++) {
-            const input = document.createElement("div");
-            input!.className = 'box uppercase font-bold text-4xl m-0.5 rounded border border-gray-500 h-12 w-12 flex justify-items-center items-center';
-            row.appendChild(input)
-        }
-    }
-
-    listenInput(userWord, Words, guesThisWord, attempt)
-  
-}
-
-function listenInput(userWord: string[], words: string[], guesThis: string[], attempt: number) {
-    document.addEventListener('keyup', (event) => {
-        let currentRow = document.getElementsByClassName('box-rows')[attempt];
-
-        console.log(attempt, currentRow)
-        if (userWord.length < 5 && event.key.match(/[a-z]/gi) && event.key !== 'Backspace') {
-            userWord.push(event.key.toString())
-            currentRow.children[userWord.length -1].innerHTML = userWord[userWord.length -1]
-        }
-        if (event.key === 'Backspace') {
-            currentRow.children[userWord.length -1].innerHTML = ''
-            userWord.splice(-1)
-        }
-
-        if (event.key === 'Enter' && userWord.length === 5) {
-            if (words.includes(userWord.join(''))) {
-                userWord.forEach((uword: string, index: number) => {
-                    if (guesThis.join('').includes(uword)) {
-                        if (guesThis[index] === uword) {
-                            currentRow.children[index].classList.add('bg-green-700')
-                        } else {
-                            currentRow.children[index].classList.add('bg-orange-700')
-                        }
-                    } else {
-                        currentRow.children[index].classList.add('bg-gray-700')                 
-                    }
-
-                })
-                attempt++ 
-                userWord = []
-            } else {
-                console.log('this word doesnt exist in our DB')
-            }
-
-        }
-        if(attempt > 5) return console.log('its over')
+    startOver.addEventListener('click', () => {
+        infoID.removeChild(startOver)
+        initGame()
     })
 }
 
+function initGame() {
+    const playBoard = document.getElementById('play-board') as HTMLDivElement
+    playBoard.innerHTML = ''
+
+    // creating the play board
+    for (let i = 0; i < 6; i++) {
+        const row = document.createElement("div");
+        row!.className = 'box-rows flex';
+        playBoard!.prepend(row);
+
+        for (let i = 0; i < 5; i++) {
+            const input = document.createElement("div");
+            input!.className = 'box uppercase font-bold text-4xl m-0.5 rounded border border-gray-500 h-12 w-12 flex justify-center items-center duration-500 delay-200';
+            row.prepend(input)
+        }
+    }
+    listenInput()
+}
+
+function listenInput() {
+    const trysAt = { 'attempt': 0 }
+    const userWord: string[] = [];
+    const guesThis = randomWord(Words);
+
+    document.addEventListener('keyup', (event) => {
+        checkInput({ userWord, guesThis, event, trysAt })
+        if (trysAt.attempt > 5) return endgame()
+    })
+}
+
+type checker = {
+    userWord: string[],
+    guesThis: string[],
+    event: KeyboardEvent,
+    trysAt: { "attempt": number },
+}
+
+function checkInput({ userWord, guesThis, event, trysAt }: checker) {
+    let currentRow = document.getElementsByClassName('box-rows')[trysAt.attempt];
+
+    if (userWord.length < 5 && event.key.match(/[a-z]/gi) && event.key.length < 2) {
+        userWord.push(event.key.toString())
+        currentRow.children[userWord.length - 1].innerHTML = userWord[userWord.length - 1]
+        console.log(userWord)
+    }
+    if (event.key === 'Backspace' && userWord.length !== 0) {
+        currentRow.children[userWord.length - 1].innerHTML = ''
+        userWord.splice(-1)
+    }
+    if (event.key === 'Enter' && userWord.length === 5) {
+        if (Words.includes(userWord.join(''))) {
+            userWord.forEach((uword: string, index: number) => {
+                setTimeout(() => {
+                    if (guesThis.join('').includes(uword)) {
+                        if (guesThis[index] === uword) {
+                            currentRow.children[index].classList.add('bg-green-500', 'text-white')
+                        } else {
+                            currentRow.children[index].classList.add('bg-amber-500', 'text-white')
+                        }
+                    } else {
+                        currentRow.children[index].classList.add('bg-gray-400', 'text-white')
+                    }
+                }, index * 400);
+            })
+            if (userWord.join('') === guesThis.join('')) return endgame()
+            trysAt.attempt++
+            userWord.length = 0
+        } else {
+            const infoID = document.getElementById('information') as HTMLDivElement;
+            const notExist = document.createElement("div");
+            notExist.className = 'px-4 py-1 rounded bg-cyan-400 text-white';
+            notExist.innerText = 'you fucked up';
+            infoID.appendChild(notExist);
+
+            setTimeout(() => {
+                infoID.removeChild(notExist)
+            }, 2500);
+        }
+    }
+}
 
 function randomWord(wordArray: string[]): string[] {
     const chosenWord = wordArray[Math.floor(Math.random() * wordArray.length)]
