@@ -42,6 +42,8 @@ function listenInput() {
         checkInput({ userWord, guesThis, event, trysAt })
         if (trysAt.attempt > 5) return endgame()
     })
+
+
 }
 
 type checker = {
@@ -57,7 +59,6 @@ function checkInput({ userWord, guesThis, event, trysAt }: checker) {
     if (userWord.length < 5 && event.key.match(/[a-z]/gi) && event.key.length < 2) {
         userWord.push(event.key.toString())
         currentRow.children[userWord.length - 1].innerHTML = userWord[userWord.length - 1]
-        console.log(userWord)
     }
     if (event.key === 'Backspace' && userWord.length !== 0) {
         currentRow.children[userWord.length - 1].innerHTML = ''
@@ -70,11 +71,14 @@ function checkInput({ userWord, guesThis, event, trysAt }: checker) {
                     if (guesThis.join('').includes(uword)) {
                         if (guesThis[index] === uword) {
                             currentRow.children[index].classList.add('bg-green-500', 'text-white')
+                            keyboardColor('bg-green-500', uword);
                         } else {
                             currentRow.children[index].classList.add('bg-amber-500', 'text-white')
+                            keyboardColor('bg-amber-500', uword);
                         }
                     } else {
                         currentRow.children[index].classList.add('bg-gray-400', 'text-white')
+                        keyboardColor('bg-gray-400', uword);
                     }
                 }, index * 400);
             })
@@ -94,6 +98,15 @@ function checkInput({ userWord, guesThis, event, trysAt }: checker) {
         }
     }
 }
+
+function keyboardColor(color: string, pressedLetter: string) {
+    const button = document.getElementsByClassName(pressedLetter);
+    if (button[0].classList.contains('bg-gray-300')) {
+        button[0].classList.remove('bg-gray-500')
+        button[0].classList.add(color)
+    }
+}
+
 
 function randomWord(wordArray: string[]): string[] {
     const chosenWord = wordArray[Math.floor(Math.random() * wordArray.length)]
