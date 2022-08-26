@@ -20,7 +20,6 @@ function initGame() {
     const playBoard = document.getElementById("play-board") as HTMLDivElement;
     playBoard.innerHTML = "";
 
-    // creating the play board
     for (let i = 0; i < 6; i++) {
         const row = document.createElement("div");
         row!.className = "box-rows flex";
@@ -37,41 +36,32 @@ function initGame() {
 }
 
 function listenInput() {
+    const keyboard = <HTMLElement>document.getElementById("keyboard-count");
     const trysAt = { attempt: 0 };
     const userWord: string[] = [];
     const guesThis = randomWord(Words);
+    console.log(guesThis)
 
     document.addEventListener("keyup", (event) => {
-        checkInput({ userWord, guesThis, event, trysAt });
-
-        if (trysAt.attempt > 5) setTimeout(() => endgame(), 2000);
+        const { key } = event;
+        checkInput({ userWord, guesThis, key, trysAt });
+        if (trysAt.attempt > 5) endgame()
     });
+
+    keyboard.addEventListener("click", (event) => {
+        const key = (event.target as Element).innerHTML
+        checkInput({ userWord, guesThis, key, trysAt });
+
+    })
 }
 
-type checker = {
-    userWord: string[];
-    guesThis: string[];
-    event: KeyboardEvent;
-    trysAt: { attempt: number };
-};
-
-function checkInput({ userWord, guesThis, event, trysAt }: checker) {
+function checkInput({ userWord, guesThis, key, trysAt }: inputChecker) {
     let currentRow = document.getElementsByClassName("box-rows")[trysAt.attempt];
 
-    if (
-        userWord.length < 5 &&
-        event.key.match(/[a-z]/gi) &&
-        event.key.length < 2
-    ) {
-        userWord.push(event.key.toString());
-        currentRow.children[userWord.length - 1].innerHTML =
-            userWord[userWord.length - 1];
-    }
-    if (event.key === "Backspace" && userWord.length !== 0) {
-        currentRow.children[userWord.length - 1].innerHTML = "";
-        userWord.splice(-1);
-    }
-    if (event.key === "Enter" && userWord.length === 5) {
+    pushArray({ userWord, key, currentRow })
+    sliceArray({ userWord, key, currentRow })
+
+    if (key === "Enter" && userWord.length === 5) {
         if (Words.includes(userWord.join(""))) {
             userWord.forEach((uword: string, index: number) => {
                 setTimeout(() => {
@@ -105,39 +95,61 @@ function checkInput({ userWord, guesThis, event, trysAt }: checker) {
             const infoID = document.getElementById("information") as HTMLDivElement;
             const notExist = document.createElement("div");
             notExist.className = "px-4 py-1 rounded bg-cyan-400 text-white";
-            notExist.innerText = "you fucked up";
+            notExist.innerText = "This word doesn't exist in our DB";
             infoID.appendChild(notExist);
-
-            setTimeout(() => {
-                infoID.removeChild(notExist);
-            }, 2500);
+            setTimeout(() => infoID.removeChild(notExist), 2500)
         }
     }
 }
 
-function clearKeyboard() {
-    const letterbuttons = document.getElementsByTagName("button");
-    for (let button of letterbuttons) {
-        if (!button.className.includes("bg-gray-300")) {
-            button.className.replace(/(bg-.*?00)/g, "bg-gray-300");
-            const colorButton = button.className.match(
-                /(bg-.*?00)/g
-            ) as RegExpMatchArray;
+function pushArray({ userWord, key, currentRow }: arrayChecker) {
+    const rules = userWord.length < 5 && key.match(/[a-z]/gi) && key.length < 2;
+    if (rules) {
+        userWord.push(key.toString());
+        currentRow.children[userWord.length - 1].innerHTML = userWord[userWord.length - 1];
+    };
+};
 
-            button.classList.replace(colorButton[0], "bg-gray-300");
-        }
-    }
-}
-
-function keyboardColor(color: string, pressedLetter: string) {
-    const button = document.getElementsByClassName(pressedLetter);
-    if (button[0].classList.contains("bg-gray-300")) {
-        button[0].classList.remove("bg-gray-300");
-        button[0].classList.add(color);
-    }
-}
+function sliceArray({ userWord, key, currentRow }: arrayChecker) {
+    const rules = key === "Backspace" && userWord.length !== 0 || key === "Del" && userWord.length !== 0;
+    if (rules) {
+        currentRow.children[userWord.length - 1].innerHTML = "";
+        userWord.splice(-1);
+    };
+};
 
 function randomWord(wordArray: string[]): string[] {
     const chosenWord = wordArray[Math.floor(Math.random() * wordArray.length)];
     return chosenWord.split("");
+};
+
+type inputChecker = {
+    userWord: string[];
+    guesThis: string[];
+    key: string;
+    trysAt: { attempt: number };
+};
+type arrayChecker = {
+    userWord: string[];
+    key: string;
+    currentRow: Element;
 }
+
+// not happy with this code
+function clearKeyboard() {
+    const letterbuttons = document.getElementsByTagName("button");
+    setTimeout(() => {
+        for (let button of letterbuttons) {
+            if (!button.className.includes("bg-gray-300")) {
+                const colorButton = button.className.match(/(bg-.*?00)/g) as RegExpMatchArray;
+                button.classList.replace(colorButton[0], "bg-gray-300");
+            }
+        }
+    }, 2500)
+}
+// not happy with this code
+function keyboardColor(color: string, pressedLetter: string) {
+    const button = document.getElementsByClassName(pressedLetter);
+    const colorButton = button[0].className.match(/(bg-.*?00)/g) as RegExpMatchArray;
+    if (colorButton[0] !== 'bg-green-500') button[0].classList.replace(colorButton[0], color);
+};

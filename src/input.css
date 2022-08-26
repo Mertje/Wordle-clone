@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+    .btn-keyboard {
+      @apply px-3 font-bold border-0 ml-1 h-14 rounded cursor-pointer text-black flex items-center uppercase bg-gray-300;
+    }
+  }
