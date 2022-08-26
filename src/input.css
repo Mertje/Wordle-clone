@@ -6,4 +6,7 @@
     .btn-keyboard {
       @apply px-3 font-bold border-0 ml-1 h-14 rounded cursor-pointer text-black flex items-center uppercase bg-gray-300;
     }
+    .letter-boxes {
+      @apply uppercase font-bold text-4xl m-0.5 rounded border border-gray-500 h-12 w-12 flex justify-center items-center duration-500 delay-200;
+    }
   }
