@@ -11,12 +11,10 @@ function endgame() {
     startOver.innerText = "Start Game";
     infoID.appendChild(startOver);
 
-    clearKeyboard();
-
     startOver.addEventListener("click", () => {
         infoID.removeChild(startOver);
-        initGame();
         keyboard.classList.remove('hidden')
+        initGame();
     });
 }
 
@@ -43,31 +41,28 @@ function listenInput() {
     const trysAt = { attempt: 0, wait: 0 };
     const userWord: string[] = [];
     const guesThis = randomWord(Words);
+    console.log(guesThis)
 
-    document.addEventListener("keyup", (event) => {
-        const { key } = event;
-        checkInput({ userWord, guesThis, key, trysAt });
-    });
+    document.addEventListener("keyup", getKey);
+    keyboard.addEventListener("click", getKey);
 
-    keyboard.addEventListener("click", (event) => {
-        const key = (event.target as Element).innerHTML;
+    function getKey(event: KeyboardEvent | MouseEvent) {
+        const key = event.type === "click" ? (event.target as Element).innerHTML : (event as KeyboardEvent).key;
         checkInput({ userWord, guesThis, key, trysAt });
-    });
+    }
 }
 
 function checkInput({ userWord, guesThis, key, trysAt }: inputChecker) {
     if (trysAt.wait) return;
     let currentRow = document.getElementsByClassName("box-rows")[trysAt.attempt];
-
     pushArray({ userWord, key, currentRow });
     sliceArray({ userWord, key, currentRow });
     checkArray({ userWord, key, currentRow, guesThis, trysAt });
 
     if (trysAt.attempt > 5) {
         message(`You lost, The word was ${guesThis.join("")}`);
-        return endgame();
+        refreshPage()
     };
-
 }
 
 function checkArray({ userWord, key, currentRow, guesThis, trysAt }: arrayValidation) {
@@ -78,7 +73,7 @@ function checkArray({ userWord, key, currentRow, guesThis, trysAt }: arrayValida
             if (userWord.join("") === guesThis.join("")) {
                 trysAt.wait = 1;
                 setTimeout(() => message('You have won the game'), 2200);
-                return endgame();
+                refreshPage()
             };
             trysAt.attempt++;
             userWord.length = 0;
@@ -89,10 +84,10 @@ function checkArray({ userWord, key, currentRow, guesThis, trysAt }: arrayValida
 function loopArray({ userWord, guesThis, currentRow, trysAt }: loopArray) {
     userWord.forEach((uword: string, index: number) => {
         setTimeout(() => {
-            const color = guesThis[index] === uword ? "bg-green-500" : "bg-amber-500";
-            const finalcolor = !guesThis.join("").includes(uword) ? "bg-gray-400" : color;
+            const color = guesThis[index] === uword ? "bg-green-500" : "bg-amber-500"
+            const finalcolor = !guesThis.join("").includes(uword) ? "bg-gray-400" : color
             giveColor(currentRow, index, uword, finalcolor)
-            trysAt.wait = guesThis.length - 1 === index ? 0 : 1;
+            if (guesThis.length - 1 === index) trysAt.wait = 0;
         }, index * 400);
     });
 }
@@ -132,6 +127,11 @@ function randomWord(wordArray: string[]): string[] {
     return chosenWord.split("");
 }
 
+function refreshPage() {
+    setTimeout(() => {
+        location.reload();
+    }, 3400);
+}
 
 interface basis {
     userWord: string[];
@@ -155,22 +155,6 @@ interface arrayNeeds {
     currentRow: Element;
 };
 
-
-
-// not happy with this code
-function clearKeyboard() {
-    const letterbuttons = document.getElementsByTagName("button");
-    setTimeout(() => {
-        for (let button of letterbuttons) {
-            if (!button.className.includes("bg-gray-300")) {
-                const colorButton = button.className.match(
-                    /(bg-.*?00)/g
-                ) as RegExpMatchArray;
-                button.classList.replace(colorButton[0], "bg-gray-300");
-            }
-        }
-    }, 2500);
-}
 // not happy with this code
 function keyboardColor(color: string, pressedLetter: string) {
     const button = document.getElementsByClassName(pressedLetter);
