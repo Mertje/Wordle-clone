@@ -57,47 +57,43 @@ function listenInput() {
 }
 
 function checkInput({ userWord, guesThis, key, trysAt }: inputChecker) {
-    if (!trysAt.wait) {
-        let currentRow = document.getElementsByClassName("box-rows")[trysAt.attempt];
-        pushArray({ userWord, key, currentRow });
-        sliceArray({ userWord, key, currentRow });
-        checkArray({ userWord, key, currentRow, guesThis, trysAt })
-    }
+    if (trysAt.wait) return;
+    let currentRow = document.getElementsByClassName("box-rows")[trysAt.attempt];
+
+    pushArray({ userWord, key, currentRow });
+    sliceArray({ userWord, key, currentRow });
+    checkArray({ userWord, key, currentRow, guesThis, trysAt });
+
     if (trysAt.attempt > 5) {
-        message(`You lost, The word was ${guesThis.toString}`)
-        endgame()
-    }
+        message(`You lost, The word was ${guesThis.join("")}`);
+        return endgame();
+    };
+
 }
+
 function checkArray({ userWord, key, currentRow, guesThis, trysAt }: arrayValidation) {
     if (key === "Enter" && userWord.length === 5) {
         if (Words.includes(userWord.join(""))) {
             trysAt.wait = 1;
-
             loopArray({ userWord, guesThis, currentRow, trysAt });
-
             if (userWord.join("") === guesThis.join("")) {
-                setTimeout(() => {
-                    trysAt.wait = 1;
-                    message('you have won the game')
-                    endgame()
-                }, 2000);
-            }
-
+                trysAt.wait = 1;
+                setTimeout(() => message('You have won the game'), 2200);
+                return endgame();
+            };
             trysAt.attempt++;
             userWord.length = 0;
-        } else message("This word doesn't exist in our DB")
+        } else message("This word doesn't exist in our DB");
     }
 }
 
 function loopArray({ userWord, guesThis, currentRow, trysAt }: loopArray) {
     userWord.forEach((uword: string, index: number) => {
         setTimeout(() => {
-            if (guesThis.join("").includes(uword)) {
-                if (guesThis[index] === uword)
-                    giveColor(currentRow, index, uword, "bg-green-500")
-                else giveColor(currentRow, index, uword, "bg-amber-500")
-            } else giveColor(currentRow, index, uword, "bg-gray-400")
-            if (guesThis.length - 1 === index) trysAt.wait = 0
+            const color = guesThis[index] === uword ? "bg-green-500" : "bg-amber-500";
+            const finalcolor = !guesThis.join("").includes(uword) ? "bg-gray-400" : color;
+            giveColor(currentRow, index, uword, finalcolor)
+            trysAt.wait = guesThis.length - 1 === index ? 0 : 1;
         }, index * 400);
     });
 }
