@@ -43,7 +43,6 @@ function listenInput() {
     const trysAt = { attempt: 0, wait: 0 };
     const userWord: string[] = [];
     const guesThis = randomWord(Words);
-    console.log(guesThis);
 
     document.addEventListener("keyup", (event) => {
         const { key } = event;
